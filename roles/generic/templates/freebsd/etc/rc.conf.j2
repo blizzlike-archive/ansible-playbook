@@ -1,0 +1,10 @@
+clear_tmp_enable="YES"
+hostname="{{ ansible_fqdn }}"
+ifconfig_{{ interface }}="inet {{ ipv4addr }} netmask {{ ipv4mask }}"
+defaultrouter="{{ ipv4gw }}"
+sshd_enable="YES"
+ntpdate_enable="YES"
+# Set dumpdev to "AUTO" to enable crash dumps, "NO" to disable
+dumpdev="AUTO"
+
+zfs_enable="YES"

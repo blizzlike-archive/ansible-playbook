@@ -1,0 +1,6 @@
+domain {{ resolv_domain }}
+search {{ resolv_search }}
+
+{% for ns in resolv_server %}
+nameserver {{ ns }}
+{% endfor %}

@@ -1,0 +1,4 @@
+---
+- name: include freebsd specifics
+  include: ./freebsd/main.yml
+  when: ansible_distribution == "FreeBSD"
