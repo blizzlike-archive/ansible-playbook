@@ -1,0 +1,16 @@
+---
+- name: create jails zpool
+  command: "zpool create -O compression=lz4 zjails {{ zjails_dev }}"
+  args:
+    creates: /zjails
+
+- name: create zfs for jails
+  zfs:
+    name: "zjails/{{ item }}"
+    state: present
+    extra_zfs_properties:
+      mountpoint: "/zjails/{{ item }}"
+  with_items:
+  - templates
+  - prod
+  - testing

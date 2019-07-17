@@ -5,3 +5,10 @@
 
   roles:
   - generic
+
+- name: assign domU role
+  hosts: all
+  remote_user: root
+
+  roles:
+  - domU
