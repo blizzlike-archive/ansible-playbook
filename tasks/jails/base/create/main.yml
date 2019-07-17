@@ -1,0 +1,49 @@
+---
+- hosts: all
+  tasks:
+  - name: fetch operating system
+    get_url:
+      url: "https://download.freebsd.org/ftp/releases/amd64/{{ freebsd_release }}/{{ item.tarball }}"
+      dest: "/zjails/{{ freebsd_release }}-{{ item.tarball }}"
+      owner: root
+      group: wheel
+      mode: 0640
+    with_items:
+    - { tarball: base.txz }
+    - { tarball: lib32.txz }
+
+  - name: create zfs
+    zfs:
+      name: "zjails/templates/{{ freebsd_release }}"
+      state: present
+      extra_zfs_properties:
+        mountpoint: "/zjails/templates/{{ freebsd_release }}"
+
+  - name: extract operating system
+    command: "tar -zxvf /zjails/{{ freebsd_release }}-{{ item.tarball }} -C /zjails/templates/{{ freebsd_release }}"
+    args:
+      creates: "/zjails/templates/{{ freebsd_release }}{{ item.creates }}"
+      warn: no
+    with_items:
+    - { tarball: base.txz, creates: /etc/rc }
+    - { tarball: lib32.txz, creates: /usr/lib32/libc.so }
+
+  - name: drop src component in jail
+    lineinfile:
+      path: "/zjails/templates/{{ freebsd_release }}/etc/freebsd-update.conf"
+      regexp: "^Components"
+      line: "Components world kernel"
+
+  - name: fetch any new FreeBSD updates
+    command: "freebsd-update -f /zjails/templates/{{ freebsd_release }}/etc/freebsd-update.conf -b /zjails/templates/{{ freebsd_release }} fetch"
+    register: freebsd_update
+    changed_when: "'No updates needed' not in freebsd_update.stdout"
+
+  - name: install FreeBSD updates
+    command: "freebsd-update -f /zjails/templates/{{ freebsd_release }}/etc/freebsd-update.conf -b /zjails/templates/{{ freebsd_release }} install"
+    when: freebsd_update.changed
+
+  - name: create snapshot
+    zfs:
+      name: "zjails/templates/{{ freebsd_release }}@latest"
+      state: present
