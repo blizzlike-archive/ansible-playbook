@@ -1,16 +1,28 @@
 ---
 - name: basic configuration
   template:
-    src: freebsd/etc/rc.conf.j2
-    dest: /etc/rc.conf
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
     owner: root
     group: wheel
     mode: 0644
+  vars:
+    hostname: "{{ inventory_hostname }}"
   with_items:
-  - { src: "freebsd/etc/rc.conf.j2", dest: "/etc/rc.conf" }
-  - { src: "etc/resolv.conf.j2", dest: "/etc/resolv.conf" }
+  - { src: "./freebsd/etc/rc.conf.j2", dest: "/etc/rc.conf" }
+  - { src: "./common/etc/resolv.conf.j2", dest: "/etc/resolv.conf" }
 
-- name: create jails zpool
-  command: "zpool create -O compression=lz4 zjails {{ zjails_dev }}"
-  args:
-    creates: /zjails
+- name: allow ssh key auth for root
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    insertafter: "^#PermitRootLogin"
+    line: "PermitRootLogin prohibit-password"
+    state: present
+
+- name: install generic packages
+  pkgng:
+    name: "{{ pkgs }}"
+    state: present
+  vars:
+    pkgs:
+    - vim-tiny

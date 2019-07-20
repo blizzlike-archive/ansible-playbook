@@ -1,0 +1,54 @@
+---
+- hosts: all
+  tasks:
+  - name: clone jail snapshot
+    shell: "zfs send -R zjails/templates/{{ freebsd_release }}@latest | zfs receive zjails/{{ jail_stage }}/{{ jail_name }}"
+    args:
+      creates: "/zjails/{{ jail_stage }}/{{ jail_name }}"
+
+  - name: set jail mountpoint
+    zfs:
+      name: "zjails/{{ jail_stage }}/{{ jail_name }}"
+      state: present
+      extra_zfs_properties:
+        mountpoint: "/zjails/{{ jail_stage }}/{{ jail_name }}"
+
+  - name: fetch any new FreeBSD updates
+    command: "freebsd-update -f /zjails/{{ jail_stage }}/{{ jail_name }}/etc/freebsd-update.conf -b /zjails/{{ jail_stage }}/{{ jail_name }} fetch"
+    register: freebsd_update
+    changed_when: "'No updates needed' not in freebsd_update.stdout"
+
+  - name: install FreeBSD updates
+    command: "freebsd-update -f /zjails/{{ jail_stage }}/{{ jail_name }}/etc/freebsd-update.conf -b /zjails/{{ jail_stage }}/{{ jail_name }} install"
+    when: freebsd_update.changed
+
+  - name: create /root/.ssh
+    file:
+      dest: "/zjails/{{ jail_stage }}/{{ jail_name }}/root/.ssh"
+      owner: root
+      group: wheel
+      mode: 0700
+      state: directory
+
+  - name: bootstrap jail config
+    template:
+      src: "../../../roles/generic/templates/{{ item.prefix }}/{{ item.path }}.j2"
+      dest: "/zjails/{{ jail_stage }}/{{ jail_name }}{{ item.path }}"
+      owner: root
+      group: wheel
+      mode: "{{ item.mode }}"
+    vars:
+      hostname: "{{ jail_name }}.{{ ansible_fqdn }}"
+      ipv4addr: "{{ hostvars[jail_name + '.' + ansible_fqdn]['ipv4addr'] }}"
+      ipv4mask: "{{ hostvars[jail_name + '.' + ansible_fqdn]['ipv4mask'] }}"
+      ipv4gw: "{{ hostvars[jail_name + '.' + ansible_fqdn]['ipv4gw'] }}"
+    with_items:
+    - { prefix: common, path: /root/.ssh/authorized_keys, mode: '0600' }
+    - { prefix: freebsd, path: /etc/rc.conf, mode: '0640' }
+
+  - name: allow ssh public key auth
+    lineinfile:
+      path: "/zjails/{{ jail_stage }}/{{ jail_name }}/etc/ssh/sshd_config"
+      insertafter: "^#PermitRootLogin"
+      line: "PermitRootLogin prohibit-password"
+      state: present

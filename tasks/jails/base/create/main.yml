@@ -43,6 +43,16 @@
     command: "freebsd-update -f /zjails/templates/{{ freebsd_release }}/etc/freebsd-update.conf -b /zjails/templates/{{ freebsd_release }} install"
     when: freebsd_update.changed
 
+  - name: install base packages
+    pkgng:
+      name: "{{ pkgs }}"
+      rootdir: "/zjails/templates/{{ freebsd_release }}"
+      state: present
+    vars:
+      pkgs:
+      - pkg
+      - python36
+
   - name: create snapshot
     zfs:
       name: "zjails/templates/{{ freebsd_release }}@latest"

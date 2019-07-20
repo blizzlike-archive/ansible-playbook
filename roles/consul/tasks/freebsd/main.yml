@@ -1,0 +1,26 @@
+---
+- name: install packages
+  pkgng:
+    name: "{{ pkgs }}"
+    state: present
+  vars:
+    pkgs:
+    - consul
+
+- name: create directories
+  file:
+    dest: "{{ item.dest }}"
+    owner: root
+    group: consul
+    mode: "{{ item.mode }}"
+    state: directory
+  with_items:
+  - { dest: /usr/local/etc/consul.d, mode: '0755' }
+
+- name: configure consul
+  template:
+    src: usr/local/etc/consul.d/consul.hcl.j2
+    dest: /usr/local/etc/consul.d/consul.hcl
+    owner: root
+    group: consul
+    mode: 0640

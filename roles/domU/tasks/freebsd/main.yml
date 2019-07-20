@@ -1,4 +1,11 @@
 ---
+- name: configure xen console
+  lineinfile:
+    path: /etc/ttys
+    insertafter: "^# Virtual terminals"
+    line: 'xc0 	"/usr/libexec/getty Pc"         xterm   on  secure'
+    state: present
+
 - name: create jails zpool
   command: "zpool create -O compression=lz4 zjails {{ zjails_dev }}"
   args:
@@ -14,3 +21,20 @@
   - templates
   - prod
   - testing
+
+- name: copy netgraph script
+  copy:
+    remote_src: yes
+    src: /usr/src/share/examples/jails/jng
+    dest: /usr/sbin/jng
+    owner: root
+    group: wheel
+    mode: 0774
+
+- name: create /etc/jail.conf
+  template:
+    src: templates/freebsd/etc/jail.conf.j2
+    dest: /etc/jail.conf
+    owner: root
+    group: wheel
+    mode: 0640

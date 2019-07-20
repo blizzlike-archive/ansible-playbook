@@ -1,10 +1,28 @@
 clear_tmp_enable="YES"
-hostname="{{ ansible_fqdn }}"
-ifconfig_{{ interface }}="inet {{ ipv4addr }} netmask {{ ipv4mask }}"
+hostname="{{ hostname }}"
+{% if hostname in groups['jail'] %}
+{% set iface = "ng0_" + hostname.split(".")[0] %}
+{% else %}
+{% set iface = interface %}
+{% endif %}
+ifconfig_{{ iface }}="inet {{ ipv4addr }} netmask {{ ipv4mask }}"
 defaultrouter="{{ ipv4gw }}"
 sshd_enable="YES"
 ntpdate_enable="YES"
 # Set dumpdev to "AUTO" to enable crash dumps, "NO" to disable
 dumpdev="AUTO"
 
+{% if hostname in groups['domU'] %}
 zfs_enable="YES"
+jail_enable="YES"
+
+# required for jails vnet
+kld_enable="YES"
+kld_list="ng_ether"
+{% endif %}
+{% if hostname in groups['consul'] or hostname in groups['vault'] %}
+consul_enable="YES"
+{% endif %}
+{% if hostname in groups['vault'] %}
+vault_enable="YES"
+{% endif %}

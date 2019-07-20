@@ -1,0 +1,16 @@
+---
+- name: install packages
+  pkgng:
+    name: "{{ pkgs }}"
+    state: present
+  vars:
+    pkgs:
+    - vault
+
+- name: configure vault
+  template:
+    src: common/etc/vault.hcl.j2
+    dest: /usr/local/etc/vault.hcl
+    owner: root
+    group: vault
+    mode: 0640

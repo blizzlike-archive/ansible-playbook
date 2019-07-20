@@ -1,0 +1,17 @@
+datacenter = "{{ consul_datacenter }}"
+encrypt = "{{ consul_key }}"
+
+enable_syslog = true
+server = true
+ui = true
+bootstrap = true
+
+client_addr = "0.0.0.0"
+
+disable_remote_exec = true
+
+acl_datacenter = "{{ consul_datacenter }}"
+acl_master_token = "{{ consul_master_token }}"
+acl_default_policy = "deny"
+acl_down_policy = "extend-cache"
+acl_agent_token = "{{ consul_agent_token }}"

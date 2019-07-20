@@ -1,0 +1,27 @@
+# /etc/jail.conf
+
+exec.start = "/bin/sh /etc/rc";
+exec.stop = "/bin/sh /etc/rc.shutdown";
+exec.prestart += "jng bridge ${name} {{ interface }}";
+exec.poststop += "jng shutdown ${name}";
+exec.clean;
+exec.consolelog = "/var/log/jail_${name}_console.log";
+
+vnet = new;
+vnet.interface = "ng0_${name}";
+
+mount.devfs;
+
+allow.nomount;
+allow.set_hostname = 0;
+allow.reserved_ports;
+
+host.hostname = "${name}.beasty.flakispace.org";
+
+{% set jail_group = 'jail_' + inventory_hostname.replace(".", "_") %}
+{% for jail in groups[jail_group] %}
+{% set jn = jail.split(".")[0] %}
+{{ jn }} {
+  path = "/zjails/{{ hostvars[jail]['jail_stage'] }}/{{ jn }}";
+}
+{% endfor %}
