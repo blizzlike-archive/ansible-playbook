@@ -6,6 +6,11 @@
     args:
       creates: "/zjails/{{ jail_stage }}/{{ jail_name }}"
 
+  - name: delete jail snapshot
+    zfs:
+      name: "zjails/{{ jail_stage }}/{{ jail_name }}@latest"
+      state: absent
+
   - name: set jail mountpoint
     zfs:
       name: "zjails/{{ jail_stage }}/{{ jail_name }}"
