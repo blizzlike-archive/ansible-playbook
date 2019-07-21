@@ -1,0 +1,23 @@
+---
+- name: install packages
+  pkgng:
+    name: "{{ pkgs }}"
+    state: present
+  vars:
+    pkgs:
+    - postgresql11-server
+
+- name: initialize database
+  command: "service postgresql initdb"
+  args:
+    creates: /var/db/postgres/data11
+    warn: False
+
+- name: configure postgres
+  lineinfile:
+    path: "{{ item.path }}"
+    insertbefore: "{{ item.regex }}"
+    line: "{{ item.line }}"
+  with_items:
+  - { path: /var/db/postgres/data11/postgresql.conf, regex: "^#listen_addresses", line: "listen_addresses = '*'" }
+  - { path: /var/db/postgres/data11/pg_hba.conf, regex: "^host.*127.0.0.1/32.*trust", line: "host all all 10.0.0.0/16 password" }

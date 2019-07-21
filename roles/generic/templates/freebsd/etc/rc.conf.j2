@@ -20,8 +20,11 @@ jail_enable="YES"
 kld_enable="YES"
 kld_list="ng_ether"
 {% endif %}
-{% if hostname in groups['consul'] or hostname in groups['vault'] %}
+{% if hostname in groups['consul']  %}
 consul_enable="YES"
+{% endif %}
+{% if hostname in groups['postgres'] %}
+postgresql_enable="YES"
 {% endif %}
 {% if hostname in groups['vault'] %}
 vault_enable="YES"

@@ -23,5 +23,10 @@ host.hostname = "${name}.beasty.flakispace.org";
 {% set jn = jail.split(".")[0] %}
 {{ jn }} {
   path = "/zjails/{{ hostvars[jail]['jail_stage'] }}/{{ jn }}";
+  {% if jail in groups['postgres'] %}
+  sysvsem = new;
+  sysvmsg = new;
+  sysvshm = new;
+  {% endif %}
 }
 {% endfor %}
