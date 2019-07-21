@@ -67,6 +67,8 @@ class VaultInventory():
           self.inventory['_meta']['hostvars'][h] = self.client.read(
             path = 'ansible/host_vars/' + h)
 
+    self.inventory['all']['vars'] = self.client.read(path = 'ansible/group_vars/all')
+
   def run(self):
     parser = argparse.ArgumentParser()
     parser.add_argument('--list', action= 'store_true')
